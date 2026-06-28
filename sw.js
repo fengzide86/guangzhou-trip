@@ -1,5 +1,5 @@
 // Service Worker - 广州旅行计划 PWA
-const CACHE_NAME = 'trip-cache-v1';
+const CACHE_NAME = 'trip-cache-v2';
 const ASSETS = [
   './',
   './index.html',
@@ -13,6 +13,8 @@ const ASSETS = [
   './expense.js',
   './router.js',
   './app.js',
+  './firebase-config.js',
+  './cloud-storage.js',
   './manifest.json'
 ];
 
