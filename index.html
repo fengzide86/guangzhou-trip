@@ -1,0 +1,823 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>广州及周边 12 天旅行计划</title>
+    <link rel="stylesheet" href="style.css">
+    <!-- Preconnect 第三方域名 -->
+    <link rel="preconnect" href="https://unpkg.com" crossorigin>
+    <link rel="preconnect" href="https://webrd01.is.autonavi.com" crossorigin>
+    <!-- Leaflet.js 地图 -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js" defer></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <!-- 页面加载动画 -->
+    <div id="loader">
+        <div class="loader-content">
+            <div class="loader-icon">
+                <i data-lucide="map-pin"></i>
+            </div>
+            <p>正在加载旅行计划...</p>
+        </div>
+    </div>
+
+    <!-- 侧边栏 -->
+    <div class="sidebar-overlay" id="sidebarOverlay">
+        <nav class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <h3>导航菜单</h3>
+                <button class="sidebar-close" id="sidebarClose">
+                    <i data-lucide="x"></i>
+                </button>
+            </div>
+            <div class="sidebar-menu">
+                <a href="#home" class="sidebar-item" data-page="home">
+                    <i data-lucide="home"></i>
+                    <span>首页</span>
+                </a>
+                <a href="#trip" class="sidebar-item" data-page="trip">
+                    <i data-lucide="calendar-days"></i>
+                    <span>行程</span>
+                </a>
+                <a href="#map" class="sidebar-item" data-page="map">
+                    <i data-lucide="map"></i>
+                    <span>地图</span>
+                </a>
+                <a href="#expense" class="sidebar-item" data-page="expense">
+                    <i data-lucide="wallet"></i>
+                    <span>费用</span>
+                </a>
+                <a href="#reminders" class="sidebar-item" data-page="reminders">
+                    <i data-lucide="bell"></i>
+                    <span>提醒</span>
+                </a>
+            </div>
+        </nav>
+    </div>
+
+    <!-- 主容器 -->
+    <div id="app">
+        <!-- 顶部导航栏 -->
+        <header class="top-bar">
+            <div class="top-bar-left">
+                <button class="icon-btn" id="menuBtn" aria-label="打开导航菜单">
+                    <i data-lucide="menu"></i>
+                </button>
+            </div>
+            <div class="top-bar-center">
+                <span class="top-bar-title" id="topBarTitle">广州旅行计划</span>
+            </div>
+            <div class="top-bar-right">
+                <div class="sync-indicator" id="syncIndicator" title="数据同步状态">
+                    <span class="sync-dot disabled" id="syncDot"></span>
+                    <span class="sync-text" id="syncText">未连接</span>
+                </div>
+                <button class="icon-btn" id="themeToggle" aria-label="切换浅色/深色模式">
+                    <i data-lucide="moon"></i>
+                </button>
+            </div>
+        </header>
+
+        <!-- ==================== 页面1：首页 ==================== -->
+        <div class="page active" id="page-home">
+            <section class="hero-section">
+                <div class="hero-bg">
+                    <div class="hero-gradient"></div>
+                    <div class="hero-pattern"></div>
+                </div>
+                <div class="hero-content">
+                    <div class="hero-badge">
+                        <i data-lucide="sparkles"></i>
+                        <span>2026 夏日之旅</span>
+                    </div>
+                    <h1 class="hero-title">广州及周边</h1>
+                    <h2 class="hero-subtitle">12 天旅行计划</h2>
+                    <p class="hero-date">
+                        <i data-lucide="calendar"></i>
+                        <span>7·1 — 7·12</span>
+                    </p>
+                    <div class="hero-tags">
+                        <span class="tag tag-blue">
+                            <i data-lucide="home"></i>
+                            东山口 4 晚
+                        </span>
+                        <span class="tag tag-green">
+                            <i data-lucide="home"></i>
+                            海珠 7 晚
+                        </span>
+                        <span class="tag tag-orange">
+                            <i data-lucide="mountain"></i>
+                            户外一日
+                        </span>
+                        <span class="tag tag-red">
+                            <i data-lucide="waves"></i>
+                            清远漂流
+                        </span>
+                    </div>
+                    <p class="hero-desc">12天，和你一起探索广州的每一个角落</p>
+                    
+                    <!-- 见面倒计时 -->
+                    <div class="countdown-section">
+                        <p class="countdown-label">距离见到你还有</p>
+                        <div class="countdown-timer" id="countdownTimer">
+                            <div class="countdown-item">
+                                <span class="countdown-number" id="countdownDays">00</span>
+                                <span class="countdown-unit">天</span>
+                            </div>
+                            <div class="countdown-item">
+                                <span class="countdown-number" id="countdownHours">00</span>
+                                <span class="countdown-unit">时</span>
+                            </div>
+                            <div class="countdown-item">
+                                <span class="countdown-number" id="countdownMinutes">00</span>
+                                <span class="countdown-unit">分</span>
+                            </div>
+                            <div class="countdown-item">
+                                <span class="countdown-number" id="countdownSeconds">00</span>
+                                <span class="countdown-unit">秒</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <button class="hero-cta" onclick="Router.goTo('trip')">
+                        <span>查看行程</span>
+                        <i data-lucide="chevron-down"></i>
+                    </button>
+                </div>
+                <div class="hero-scroll-indicator">
+                    <div class="scroll-line"></div>
+                </div>
+            </section>
+        </div>
+
+        <!-- ==================== 页面2：行程 ==================== -->
+        <div class="page" id="page-trip">
+            <!-- 住宿区域 -->
+            <section class="section" id="accommodation">
+                <div class="section-header">
+                    <div class="section-icon">
+                        <i data-lucide="building-2"></i>
+                    </div>
+                    <h2 class="section-title">住宿区域</h2>
+                    <p class="section-desc">两个住宿点，覆盖主要行程</p>
+                </div>
+                <div class="accommodation-grid">
+                    <!-- 住宿卡片 1 -->
+                    <div class="accommodation-card" data-aos="fade-up">
+                        <div class="acc-header">
+                            <span class="acc-date">7·1 — 7·5</span>
+                            <span class="acc-nights">4 晚</span>
+                        </div>
+                        <h3 class="acc-title">
+                            <i data-lucide="map-pin"></i>
+                            柏曼酒店(广州区庄地铁站店)
+                        </h3>
+                        <div class="acc-content">
+                            <div class="acc-item">
+                                <span class="acc-label">位置</span>
+                                <p>区庄地铁站附近，1号线/6号线交汇</p>
+                            </div>
+                            <div class="acc-item">
+                                <span class="acc-label">适合</span>
+                                <div class="acc-tags">
+                                    <span class="mini-tag">抵达</span>
+                                    <span class="mini-tag">休息</span>
+                                    <span class="mini-tag">西关路线</span>
+                                </div>
+                            </div>
+                            <div class="acc-item">
+                                <span class="acc-label">交通</span>
+                                <div class="transport-badges">
+                                    <span class="transport-badge metro-1">1 号线</span>
+                                    <span class="transport-badge metro-6">6 号线</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- 住宿卡片 2 -->
+                    <div class="accommodation-card" data-aos="fade-up" data-aos-delay="100">
+                        <div class="acc-header">
+                            <span class="acc-date">7·5 — 7·11</span>
+                            <span class="acc-nights">6 晚</span>
+                        </div>
+                        <h3 class="acc-title">
+                            <i data-lucide="map-pin"></i>
+                            麗枫酒店(广州江南西凤凰新村地铁站店)
+                        </h3>
+                        <div class="acc-content">
+                            <div class="acc-item">
+                                <span class="acc-label">位置</span>
+                                <p>江南西/凤凰新村地铁站附近，2号线/8号线交汇</p>
+                            </div>
+                            <div class="acc-item">
+                                <span class="acc-label">适合</span>
+                                <div class="acc-tags">
+                                    <span class="mini-tag">北京路</span>
+                                    <span class="mini-tag">广州塔</span>
+                                    <span class="mini-tag">番禺</span>
+                                    <span class="mini-tag">清远衔接</span>
+                                </div>
+                            </div>
+                            <div class="acc-item">
+                                <span class="acc-label">交通</span>
+                                <div class="transport-badges">
+                                    <span class="transport-badge metro-2">2 号线</span>
+                                    <span class="transport-badge metro-8">8 号线</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 日期导航 -->
+            <section class="section" id="dates">
+                <div class="section-header">
+                    <div class="section-icon">
+                        <i data-lucide="calendar-days"></i>
+                    </div>
+                    <h2 class="section-title">行程日历</h2>
+                    <p class="section-desc">点击日期查看当日详情</p>
+                </div>
+                <div class="date-nav-wrapper">
+                    <div class="date-nav" id="dateNav">
+                        <!-- 日期按钮由 JS 生成 -->
+                    </div>
+                    <div class="date-progress">
+                        <div class="date-progress-bar" id="dateProgressBar"></div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 每日路线地图 -->
+            <section class="section" id="tripMap">
+                <div class="section-header">
+                    <div class="section-icon">
+                        <i data-lucide="map"></i>
+                    </div>
+                    <h2 class="section-title">每日路线地图</h2>
+                    <p class="section-desc">点击日期查看当天行程路线</p>
+                </div>
+                <div class="trip-map-container">
+                    <div id="tripMapCanvas" class="trip-map-canvas"></div>
+                    <div class="trip-map-hint" id="tripMapHint">
+                        <i data-lucide="hand"></i>
+                        <span>点击上方日期按钮查看路线</span>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 行程强度视图 -->
+            <section class="section" id="intensity">
+                <div class="section-header">
+                    <div class="section-icon">
+                        <i data-lucide="activity"></i>
+                    </div>
+                    <h2 class="section-title">行程强度一览</h2>
+                    <p class="section-desc">7·8 和 7·10 是全程强度最高的两天</p>
+                </div>
+                <div class="intensity-chart" id="intensityChart">
+                    <!-- 强度柱状图由 JS 生成 -->
+                </div>
+                <div class="intensity-legend">
+                    <div class="legend-item">
+                        <span class="legend-dot legend-light"></span>
+                        <span>轻松</span>
+                    </div>
+                    <div class="legend-item">
+                        <span class="legend-dot legend-medium"></span>
+                        <span>中等</span>
+                    </div>
+                    <div class="legend-item">
+                        <span class="legend-dot legend-high"></span>
+                        <span>高强度</span>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 每日计划 -->
+            <section class="section" id="dailyPlans">
+                <div class="section-header">
+                    <div class="section-icon">
+                        <i data-lucide="list-checks"></i>
+                    </div>
+                    <h2 class="section-title">每日计划</h2>
+                    <p class="section-desc">每天一张卡片，主线清晰</p>
+                </div>
+                <div class="daily-cards" id="dailyCards">
+                    <!-- 每日卡片由 JS 生成 -->
+                </div>
+            </section>
+        </div>
+
+        <!-- 天气状态栏（所有页面共享） -->
+        <div class="weather-status-bar" id="weatherStatusBar">
+            <span class="weather-status-icon" id="weatherStatusIcon">☀️</span>
+            <span class="weather-status-text" id="weatherStatusText">加载中...</span>
+        </div>
+
+        <!-- ==================== 页面3：地图 ==================== -->
+        <div class="page" id="page-map">
+            <section class="section" id="overviewMap">
+                <div class="section-header">
+                    <div class="section-icon">
+                        <i data-lucide="map"></i>
+                    </div>
+                    <h2 class="section-title">行程地图</h2>
+                    <p class="section-desc">点击地点查看地图位置</p>
+                </div>
+                <div class="map-selector-grid" id="mapSelectorGrid">
+                    <!-- 由 JS 生成 -->
+                </div>
+            </section>
+        </div>
+
+        <!-- ==================== 页面4：费用计算 ==================== -->
+        <div class="page" id="page-expense">
+            <section class="section expense-page">
+                <div class="section-header">
+                    <div class="section-icon">
+                        <i data-lucide="wallet"></i>
+                    </div>
+                    <h2 class="section-title">费用计算</h2>
+                    <p class="section-desc">轻松算清每一笔开销</p>
+                </div>
+
+                <!-- 总览卡片 -->
+                <div class="expense-overview-card">
+                    <div class="expense-overview-chart">
+                        <div class="donut-chart" id="donutChart">
+                            <div class="donut-center">
+                                <div class="donut-total" id="donutTotal">¥0</div>
+                                <div class="donut-label">总计</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="expense-overview-stats">
+                        <div class="stat-item stat-you">
+                            <div class="stat-label">
+                                <span class="stat-dot" style="background: var(--expense-you)"></span>
+                                <span>zd出</span>
+                            </div>
+                            <div class="stat-value" id="statYou">¥0</div>
+                            <div class="stat-percent" id="statYouPercent">0%</div>
+                        </div>
+                        <div class="stat-item stat-her">
+                            <div class="stat-label">
+                                <span class="stat-dot" style="background: var(--expense-her)"></span>
+                                <span>yy出</span>
+                            </div>
+                            <div class="stat-value" id="statHer">¥0</div>
+                            <div class="stat-percent" id="statHerPercent">0%</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 类目分布 -->
+                <div class="expense-category-chart" id="categoryChart">
+                    <div class="expense-category-title">
+                        <i data-lucide="bar-chart-3"></i>
+                        <span>类目分布</span>
+                    </div>
+                    <div class="category-bars" id="categoryBars">
+                        <!-- 由 JS 生成 -->
+                    </div>
+                </div>
+
+                <!-- 操作按钮 -->
+                <div class="expense-actions">
+                    <button class="expense-btn primary" onclick="ExpenseModule.showAddModal()">
+                        <i data-lucide="plus"></i>
+                        <span>添加支出</span>
+                    </button>
+                    <button class="expense-btn secondary" onclick="ExpenseModule.showCategoryModal()">
+                        <i data-lucide="settings"></i>
+                        <span>类目管理</span>
+                    </button>
+                </div>
+
+                <!-- 支出记录 -->
+                <div class="expense-records">
+                    <div class="expense-records-header">
+                        <h3>
+                            <i data-lucide="list"></i>
+                            <span>支出记录</span>
+                        </h3>
+                    </div>
+                    <div class="expense-records-list" id="expenseRecordsList">
+                        <!-- 由 JS 生成 -->
+                    </div>
+                    <div class="expense-empty" id="expenseEmpty">
+                        <i data-lucide="inbox"></i>
+                        <p>还没有支出记录</p>
+                        <span>点击「添加支出」开始记账</span>
+                    </div>
+                </div>
+
+                <!-- 底部操作 -->
+                <div class="expense-bottom-actions">
+                    <button class="expense-bottom-btn" onclick="ExpenseModule.clearAll()">
+                        <i data-lucide="trash-2"></i>
+                        <span>清空记录</span>
+                    </button>
+                    <button class="expense-bottom-btn" onclick="ExpenseModule.exportDetail()">
+                        <i data-lucide="share-2"></i>
+                        <span>导出明细</span>
+                    </button>
+                </div>
+            </section>
+        </div>
+
+        <!-- ==================== 页面5：提醒 ==================== -->
+        <div class="page" id="page-reminders">
+            <section class="section" id="reminders">
+                <div class="section-header">
+                    <div class="section-icon">
+                        <i data-lucide="bell"></i>
+                    </div>
+                    <h2 class="section-title">通用提醒与出发前确认</h2>
+                </div>
+                <div class="reminders-grid">
+                    <!-- 天气判断 -->
+                    <div class="reminder-card">
+                    <div class="reminder-header" onclick="toggleReminder(this)" aria-expanded="false">
+                        <div class="reminder-icon weather-icon">
+                            <i data-lucide="cloud-sun"></i>
+                        </div>
+                        <h3>天气判断</h3>
+                        <i data-lucide="chevron-down" class="reminder-toggle"></i>
+                    </div>
+                        <div class="reminder-content">
+                            <p>广州 7 月主要考虑暴晒、闷热、午后雷雨。</p>
+                            <ul>
+                                <li>城市路线小雨影响不大</li>
+                                <li>户外路线重点看雷雨、强降水</li>
+                                <li><strong>7·8 增城</strong>和<strong>7·10 清远</strong>最需关注天气</li>
+                            </ul>
+                        </div>
+                    </div>
+                    <!-- 提前确认 -->
+                    <div class="reminder-card active">
+                    <div class="reminder-header" onclick="toggleReminder(this)" aria-expanded="true">
+                        <div class="reminder-icon confirm-icon">
+                            <i data-lucide="clipboard-check"></i>
+                        </div>
+                        <h3>提前确认</h3>
+                        <i data-lucide="chevron-down" class="reminder-toggle"></i>
+                    </div>
+                        <div class="reminder-content">
+                            <ul class="checklist">
+                                <li>
+                                    <i data-lucide="circle"></i>
+                                    <span>7·7 长隆国际大马戏：提前确认当天场次</span>
+                                </li>
+                                <li>
+                                    <i data-lucide="circle"></i>
+                                    <span>7·8 增城租车：取还车点选增城广场附近</span>
+                                </li>
+                                <li>
+                                    <i data-lucide="circle"></i>
+                                    <span>7·10 清远高铁：广州南不要卡点</span>
+                                </li>
+                                <li>
+                                    <i data-lucide="circle"></i>
+                                    <span>7·10 清远租车：取还车点选清远站附近</span>
+                                </li>
+                                <li>
+                                    <i data-lucide="circle"></i>
+                                    <span>7·10 古龙峡漂流：前一晚查天气和景区通知</span>
+                                </li>
+                                <li>
+                                    <i data-lucide="circle"></i>
+                                    <span>7·11 珠江夜游：按天气和体力决定</span>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                    <!-- 随身物品 -->
+                    <div class="reminder-card">
+                    <div class="reminder-header" onclick="toggleReminder(this)" aria-expanded="false">
+                        <div class="reminder-icon pack-icon">
+                            <i data-lucide="backpack"></i>
+                        </div>
+                        <h3>随身物品</h3>
+                        <i data-lucide="chevron-down" class="reminder-toggle"></i>
+                    </div>
+                        <div class="reminder-content">
+                            <div class="pack-category">
+                                <h4>日常出门</h4>
+                                <div class="pack-items">
+                                    <span class="pack-item">☂️ 晴雨伞</span>
+                                    <span class="pack-item">🧴 防晒</span>
+                                    <span class="pack-item">🔋 充电宝</span>
+                                    <span class="pack-item">🧻 纸巾/湿巾</span>
+                                    <span class="pack-item">👟 舒适鞋</span>
+                                </div>
+                            </div>
+                            <div class="pack-category">
+                                <h4>7·8 增城户外</h4>
+                                <div class="pack-items">
+                                    <span class="pack-item">🧴 防晒</span>
+                                    <span class="pack-item">🦟 防蚊</span>
+                                    <span class="pack-item">💧 水</span>
+                                    <span class="pack-item">🧢 帽子</span>
+                                    <span class="pack-item">👟 适合走路的鞋</span>
+                                </div>
+                            </div>
+                            <div class="pack-category">
+                                <h4>7·10 清远漂流</h4>
+                                <div class="pack-items">
+                                    <span class="pack-item">👕 换洗衣服</span>
+                                    <span class="pack-item">🧖 毛巾</span>
+                                    <span class="pack-item">📱 防水袋</span>
+                                    <span class="pack-item">👟 防滑鞋</span>
+                                    <span class="pack-item">👓 眼镜绳</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- 执行原则 -->
+                    <div class="reminder-card">
+                    <div class="reminder-header" onclick="toggleReminder(this)" aria-expanded="false">
+                        <div class="reminder-icon principle-icon">
+                            <i data-lucide="shield-check"></i>
+                        </div>
+                        <h3>执行原则</h3>
+                        <i data-lucide="chevron-down" class="reminder-toggle"></i>
+                    </div>
+                        <div class="reminder-content">
+                            <p class="principle-highlight">这份计划不是打卡表。</p>
+                            <p>每天保留一条主线即可，具体餐厅、停留时间和是否加项目，都按当天状态调整。</p>
+                            <h4>需要重点保住的行程：</h4>
+                            <ul class="key-routes">
+                                <li>
+                                    <span class="route-date">7·4</span>
+                                    <span>西关和西华路</span>
+                                </li>
+                                <li>
+                                    <span class="route-date">7·6</span>
+                                    <span>早茶、广州塔、小马智行</span>
+                                </li>
+                                <li>
+                                    <span class="route-date">7·7</span>
+                                    <span>长隆国际大马戏</span>
+                                </li>
+                                <li>
+                                    <span class="route-date">7·8</span>
+                                    <span>根据天气决定是否去白江湖</span>
+                                </li>
+                                <li>
+                                    <span class="route-date">7·10</span>
+                                    <span>根据天气决定是否漂流</span>
+                                </li>
+                                <li>
+                                    <span class="route-date">7·11</span>
+                                    <span>根据天气和体力决定是否珠江夜游</span>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 页脚 -->
+            <footer class="footer">
+                <div class="footer-content">
+                    <p class="footer-title">广州及周边 12 天旅行计划</p>
+                    <p class="footer-desc">7·1 — 7·12 ｜ 一起探索这座城市的精彩</p>
+                    <div class="footer-actions">
+                        <button class="footer-btn" onclick="copyAllPlans()">
+                            <i data-lucide="copy"></i>
+                            <span>复制全部行程</span>
+                        </button>
+                        <button class="footer-btn" onclick="shareTrip()">
+                            <i data-lucide="share-2"></i>
+                            <span>分享给TA</span>
+                        </button>
+                    </div>
+                    <p class="footer-credit">ZD ❤ 小芽芽</p>
+                    <p class="footer-easter-egg">小芽芽，我好想你</p>
+                </div>
+            </footer>
+        </div>
+
+    </div>
+
+    <!-- 底部导航 -->
+    <nav class="bottom-nav" id="bottomNav">
+        <a href="#home" class="nav-item active">
+            <i data-lucide="home"></i>
+            <span>首页</span>
+        </a>
+        <a href="#trip" class="nav-item">
+            <i data-lucide="calendar-days"></i>
+            <span>行程</span>
+        </a>
+        <a href="#map" class="nav-item">
+            <i data-lucide="map"></i>
+            <span>地图</span>
+        </a>
+        <a href="#expense" class="nav-item">
+            <i data-lucide="wallet"></i>
+            <span>费用</span>
+        </a>
+        <a href="#reminders" class="nav-item">
+            <i data-lucide="bell"></i>
+            <span>提醒</span>
+        </a>
+    </nav>
+
+    <!-- 添加支出弹窗 -->
+    <div class="modal-overlay" id="addExpenseModal" role="dialog" aria-modal="true" aria-label="添加支出">
+        <div class="modal-content expense-modal">
+            <div class="modal-header">
+                <h3>添加支出</h3>
+                <button class="modal-close" onclick="ExpenseModule.closeAddModal()">
+                    <i data-lucide="x"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <!-- 选择类目 -->
+                <div class="form-section">
+                    <label class="form-label">选择类目</label>
+                    <div class="category-select-grid" id="categorySelectGrid">
+                        <!-- 由 JS 生成 -->
+                    </div>
+                </div>
+                <!-- 金额 -->
+                <div class="form-section">
+                    <label class="form-label">金额</label>
+                    <div class="input-wrapper">
+                        <span class="input-prefix">¥</span>
+                        <input type="number" id="expenseAmount" placeholder="0.00" min="0" step="0.01" oninput="ExpenseModule.onAmountChange()">
+                    </div>
+                </div>
+                <!-- yy预期金额 -->
+                <div class="form-section">
+                    <label class="form-label">
+                        yy预期金额
+                        <span class="form-hint">选填，低于实际金额时生效</span>
+                    </label>
+                    <div class="input-wrapper">
+                        <span class="input-prefix">¥</span>
+                        <input type="number" id="expenseExpected" placeholder="0.00" min="0" step="0.01" oninput="ExpenseModule.onAmountChange()">
+                    </div>
+                </div>
+                <!-- 计算预览 -->
+                <div class="expense-preview" id="expensePreview">
+                    <div class="preview-row">
+                        <span>总计</span>
+                        <span id="previewTotal">¥0</span>
+                    </div>
+                    <div class="preview-bar">
+                        <div class="preview-bar-you" id="previewBarYou" style="width: 60%"></div>
+                        <div class="preview-bar-her" id="previewBarHer" style="width: 40%"></div>
+                    </div>
+                    <div class="preview-split">
+                        <div class="preview-you">
+                            <span>你出</span>
+                            <span id="previewYou">¥0</span>
+                        </div>
+                        <div class="preview-her">
+                            <span>她出</span>
+                            <span id="previewHer">¥0</span>
+                        </div>
+                    </div>
+                    <div class="preview-discount" id="previewDiscount" style="display:none">
+                        <i data-lucide="info"></i>
+                        <span>预期金额生效，她只出预期的比例</span>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="modal-btn secondary" onclick="ExpenseModule.closeAddModal()">取消</button>
+                <button class="modal-btn primary" onclick="ExpenseModule.addExpense()">添加</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 类目管理弹窗 -->
+    <div class="modal-overlay" id="categoryModal" role="dialog" aria-modal="true" aria-label="类目管理">
+        <div class="modal-content category-modal">
+            <div class="modal-header">
+                <h3>类目管理</h3>
+                <button class="modal-close" onclick="ExpenseModule.closeCategoryModal()">
+                    <i data-lucide="x"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <!-- 一般支出类目 -->
+                <div class="category-manage-section">
+                    <h4 class="category-manage-title">一般支出（你6:她4）</h4>
+                    <div class="category-manage-grid" id="normalCategoryGrid">
+                        <!-- 由 JS 生成 -->
+                    </div>
+                    <button class="add-category-btn" onclick="ExpenseModule.showAddCategoryModal('normal')">
+                        <i data-lucide="plus"></i>
+                        <span>添加类目</span>
+                    </button>
+                </div>
+                <!-- 亲属卡类目 -->
+                <div class="category-manage-section">
+                    <h4 class="category-manage-title">亲属卡（你7:她3）</h4>
+                    <div class="category-manage-grid" id="familyCategoryGrid">
+                        <!-- 由 JS 生成 -->
+                    </div>
+                    <button class="add-category-btn" onclick="ExpenseModule.showAddCategoryModal('family')">
+                        <i data-lucide="plus"></i>
+                        <span>添加类目</span>
+                    </button>
+                </div>
+                <p class="category-manage-tip">
+                    <i data-lucide="info"></i>
+                    <span>删除类目不会影响已有记录</span>
+                </p>
+            </div>
+            <div class="modal-footer">
+                <button class="modal-btn primary" onclick="ExpenseModule.closeCategoryModal()">完成</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 添加类目弹窗 -->
+    <div class="modal-overlay" id="addCategoryModal" role="dialog" aria-modal="true" aria-label="添加类目">
+        <div class="modal-content add-category-modal">
+            <div class="modal-header">
+                <h3>添加类目</h3>
+                <button class="modal-close" onclick="ExpenseModule.closeAddCategoryModal()">
+                    <i data-lucide="x"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="form-section">
+                    <label class="form-label">名称</label>
+                    <input type="text" id="newCategoryName" placeholder="输入类目名称" maxlength="10">
+                </div>
+                <div class="form-section">
+                    <label class="form-label">图标</label>
+                    <div class="icon-select-grid" id="iconSelectGrid">
+                        <!-- 由 JS 生成 -->
+                    </div>
+                </div>
+                <div class="form-section">
+                    <label class="form-label">颜色</label>
+                    <div class="color-select-grid" id="colorSelectGrid">
+                        <!-- 由 JS 生成 -->
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="modal-btn secondary" onclick="ExpenseModule.closeAddCategoryModal()">取消</button>
+                <button class="modal-btn primary" onclick="ExpenseModule.addCategory()">确定</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 地图弹窗 -->
+    <div class="map-modal-overlay" id="mapModal" role="dialog" aria-modal="true" aria-label="地点位置">
+        <div class="map-modal-content">
+            <div class="map-modal-header">
+                <h3 id="mapModalTitle">地点位置</h3>
+                <div class="map-modal-actions">
+                    <button class="map-nav-btn" id="mapNavBtn" onclick="MapModule.navigateToAmap()" title="高德地图导航">
+                        <i data-lucide="navigation"></i>
+                    </button>
+                    <button class="map-modal-close" onclick="MapModule.closeModal()">
+                        <i data-lucide="x"></i>
+                    </button>
+                </div>
+            </div>
+            <div class="map-modal-body">
+                <div id="mapModalMap" style="height:100%;width:100%"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast 提示 -->
+    <div class="toast-container" id="toastContainer"></div>
+
+    <!-- Firebase SDK (compat 版本，全局变量方式) -->
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+    <!-- 云同步配置与模块 -->
+    <script src="firebase-config.js"></script>
+    <script src="cloud-storage.js"></script>
+    <!-- Scripts -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="data.js"></script>
+    <script src="utils.js"></script>
+    <script src="storage.js"></script>
+    <script src="animations.js"></script>
+    <script src="renderer.js"></script>
+    <script src="map.js"></script>
+    <script src="expense.js"></script>
+    <script src="router.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>
