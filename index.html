@@ -1,3 +1,5 @@
+
+
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
@@ -15,6 +17,12 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- PWA -->
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#2563eb">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="广州旅行">
 </head>
 <body>
     <!-- 页面加载动画 -->
@@ -349,6 +357,68 @@
                     <p class="section-desc">轻松算清每一笔开销</p>
                 </div>
 
+                <!-- 总体预算卡片 -->
+                <div class="budget-card">
+                    <div class="budget-header">
+                        <div class="budget-title">
+                            <i data-lucide="piggy-bank"></i>
+                            <span>总体预算</span>
+                        </div>
+                        <button class="budget-edit-btn" onclick="ExpenseModule.toggleBudgetEdit()">
+                            <i data-lucide="edit-3"></i>
+                        </button>
+                    </div>
+                    <div class="budget-display" id="budgetDisplay">
+                        <div class="budget-amount" id="budgetAmount">未设置</div>
+                        <div class="budget-hint" id="budgetHint">点击编辑设置预算金额</div>
+                    </div>
+                    <div class="budget-edit" id="budgetEdit" style="display: none;">
+                        <div class="budget-input-wrapper">
+                            <span class="budget-input-prefix">¥</span>
+                            <input type="number" id="budgetInput" placeholder="输入预算金额" min="0" step="100">
+                        </div>
+                        <div class="budget-edit-actions">
+                            <button class="budget-btn-cancel" onclick="ExpenseModule.toggleBudgetEdit()">取消</button>
+                            <button class="budget-btn-save" onclick="ExpenseModule.saveBudget()">保存</button>
+                        </div>
+                    </div>
+                    <div class="budget-progress" id="budgetProgress" style="display: none;">
+                        <div class="budget-progress-bar">
+                            <div class="budget-progress-fill" id="budgetProgressFill"></div>
+                        </div>
+                        <div class="budget-stats">
+                            <div class="budget-stat">
+                                <span class="budget-stat-label">预算</span>
+                                <span class="budget-stat-value" id="budgetTotal">¥0</span>
+                            </div>
+                            <div class="budget-stat">
+                                <span class="budget-stat-label">已支出</span>
+                                <span class="budget-stat-value" id="budgetSpent">¥0</span>
+                            </div>
+                            <div class="budget-stat">
+                                <span class="budget-stat-label">剩余</span>
+                                <span class="budget-stat-value" id="budgetRemaining">¥0</span>
+                            </div>
+                        </div>
+                        <div class="budget-split">
+                            <div class="budget-split-item you">
+                                <span class="budget-split-dot" style="background: var(--expense-you)"></span>
+                                <span class="budget-split-label">你应出</span>
+                                <span class="budget-split-value" id="budgetYou">¥0</span>
+                            </div>
+                            <div class="budget-split-item her">
+                                <span class="budget-split-dot" style="background: var(--expense-her)"></span>
+                                <span class="budget-split-label">她应出</span>
+                                <span class="budget-split-value" id="budgetHer">¥0</span>
+                            </div>
+                        </div>
+                        <div class="budget-over-warning" id="budgetOverWarning" style="display: none;">
+                            <i data-lucide="alert-circle"></i>
+                            <span>已超支 <strong id="budgetOverAmount">¥0</strong></span>
+                        </div>
+                    </div>
+                </div>
+
                 <!-- 总览卡片 -->
                 <div class="expense-overview-card">
                     <div class="expense-overview-chart">
@@ -379,6 +449,18 @@
                     </div>
                 </div>
 
+                <!-- 费用趋势图 -->
+                <div class="expense-trend-chart">
+                    <div class="expense-category-title">
+                        <i data-lucide="trending-up"></i>
+                        <span>支出趋势</span>
+                    </div>
+                    <div class="trend-chart-container" id="trendChartContainer">
+                        <p class="category-empty" id="trendEmpty">暂无数据</p>
+                        <canvas id="trendChart" style="display:none"></canvas>
+                    </div>
+                </div>
+
                 <!-- 类目分布 -->
                 <div class="expense-category-chart" id="categoryChart">
                     <div class="expense-category-title">
@@ -390,7 +472,12 @@
                     </div>
                 </div>
 
-                <!-- 操作按钮 -->
+                <!-- 筛选和操作按钮 -->
+                <div class="expense-filter-bar">
+                    <div class="expense-filter-tags" id="filterTags">
+                        <span class="filter-tag active" data-filter="all" onclick="ExpenseModule.filterExpenses('all')">全部</span>
+                    </div>
+                </div>
                 <div class="expense-actions">
                     <button class="expense-btn primary" onclick="ExpenseModule.showAddModal()">
                         <i data-lucide="plus"></i>

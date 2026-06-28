@@ -1,5 +1,5 @@
 // ========================================
-// 本地存储模块（优化版：内存缓存 + 错误处理）
+// 本地存储模块（内存缓存 + 错误处理 + 预算）
 // ========================================
 
 const Storage = {
@@ -15,7 +15,6 @@ const Storage = {
         try {
             localStorage.setItem(key, value);
         } catch (e) {
-            // localStorage 满或不可用时静默失败
             console.warn('Storage write failed:', e);
         }
     },
@@ -37,6 +36,7 @@ const Storage = {
         this._cache.theme = null;
         this._expenseCache.expenses = null;
         this._expenseCache.categories = null;
+        this._budgetCache = null;
     },
 
     // 获取打卡状态
@@ -47,7 +47,6 @@ const Storage = {
         return this._cache.completedDays;
     },
 
-    // 设置打卡状态
     setCompletedDay(day, completed) {
         const days = this.getCompletedDays();
         if (completed) {
@@ -61,26 +60,22 @@ const Storage = {
         if (typeof CloudSync !== 'undefined') CloudSync.scheduleSave();
     },
 
-    // 检查是否已完成
     isDayCompleted(day) {
         return this.getCompletedDays().includes(day);
     },
 
-    // 获取主题
     getTheme() {
         if (this._cache.theme !== null) return this._cache.theme;
         this._cache.theme = this._safeGet('trip-theme') || 'light';
         return this._cache.theme;
     },
 
-    // 设置主题
     setTheme(theme) {
         this._cache.theme = theme;
         this._safeSet('trip-theme', theme);
         if (typeof CloudSync !== 'undefined') CloudSync.scheduleSave();
     },
 
-    // 获取清单状态
     getChecklistState() {
         if (this._cache.checklist !== null) return this._cache.checklist;
         const data = this._safeGet('trip-checklist');
@@ -88,7 +83,6 @@ const Storage = {
         return this._cache.checklist;
     },
 
-    // 设置清单状态
     setChecklistItem(index, checked) {
         const state = this.getChecklistState();
         state[index] = checked;
@@ -97,12 +91,10 @@ const Storage = {
         if (typeof CloudSync !== 'undefined') CloudSync.scheduleSave();
     },
 
-    // 获取清单项状态
     isChecklistChecked(index) {
         return this.getChecklistState()[index] || false;
     },
 
-    // 获取进度
     getProgress() {
         const completed = this.getCompletedDays().length;
         return Math.round((completed / 12) * 100);
@@ -112,13 +104,11 @@ const Storage = {
     // 费用相关存储
     // ========================================
 
-    // 内存缓存
     _expenseCache: {
         expenses: null,
         categories: null
     },
 
-    // 获取支出记录
     getExpenses() {
         if (this._expenseCache.expenses !== null) return this._expenseCache.expenses;
         const data = this._safeGet('trip-expenses');
@@ -126,13 +116,11 @@ const Storage = {
         return this._expenseCache.expenses;
     },
 
-    // 保存支出记录
     _saveExpenses(expenses) {
         this._expenseCache.expenses = expenses;
         this._safeSet('trip-expenses', JSON.stringify(expenses));
     },
 
-    // 添加支出
     addExpense(expense) {
         const expenses = this.getExpenses();
         expense.id = Date.now();
@@ -143,7 +131,6 @@ const Storage = {
         return expense;
     },
 
-    // 删除支出
     deleteExpense(id) {
         const expenses = this.getExpenses();
         const index = expenses.findIndex(e => e.id === id);
@@ -154,13 +141,11 @@ const Storage = {
         }
     },
 
-    // 清空支出
     clearExpenses() {
         this._saveExpenses([]);
         if (typeof CloudSync !== 'undefined') CloudSync.scheduleSave();
     },
 
-    // 获取支出统计
     getExpenseStats() {
         const expenses = this.getExpenses();
         let totalYou = 0;
@@ -192,30 +177,45 @@ const Storage = {
     },
 
     // ========================================
+    // 预算相关存储
+    // ========================================
+
+    _budgetCache: null,
+
+    getBudget() {
+        if (this._budgetCache !== null) return this._budgetCache;
+        const data = this._safeGet('trip-budget');
+        this._budgetCache = data ? parseFloat(data) : 0;
+        return this._budgetCache;
+    },
+
+    setBudget(amount) {
+        this._budgetCache = amount;
+        this._safeSet('trip-budget', amount.toString());
+        if (typeof CloudSync !== 'undefined') CloudSync.scheduleSave();
+    },
+
+    // ========================================
     // 类目相关存储
     // ========================================
 
-    // 获取类目
     getCategories() {
         if (this._expenseCache.categories !== null) return this._expenseCache.categories;
         const data = this._safeGet('trip-categories');
         if (data) {
             this._expenseCache.categories = JSON.parse(data);
         } else {
-            // 使用默认类目
             this._expenseCache.categories = JSON.parse(JSON.stringify(defaultCategories));
             this._saveCategories(this._expenseCache.categories);
         }
         return this._expenseCache.categories;
     },
 
-    // 保存类目
     _saveCategories(categories) {
         this._expenseCache.categories = categories;
         this._safeSet('trip-categories', JSON.stringify(categories));
     },
 
-    // 添加类目
     addCategory(type, category) {
         const categories = this.getCategories();
         if (!categories[type]) {
@@ -228,7 +228,6 @@ const Storage = {
         return category;
     },
 
-    // 删除类目
     deleteCategory(type, id) {
         const categories = this.getCategories();
         if (categories[type]) {
@@ -241,7 +240,6 @@ const Storage = {
         }
     },
 
-    // 获取所有类目（扁平化）
     getAllCategories() {
         const categories = this.getCategories();
         const all = [];

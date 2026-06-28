@@ -48,6 +48,9 @@ const App = {
         // 初始化费用模块
         ExpenseModule.init();
 
+        // 行程提醒
+        this.initTripReminder();
+
         // 初始化侧边栏
         this.initSidebar();
 
@@ -668,6 +671,30 @@ const App = {
         }
     },
 
+    // 行程提醒
+    initTripReminder() {
+        // 获取今天的日期（模拟7月1日开始）
+        const now = new Date();
+        const startDate = new Date('2026-07-01');
+        const diffDays = Math.floor((now - startDate) / (1000 * 60 * 60 * 24));
+        
+        // 如果还没到旅行日期或已经过了，不显示提醒
+        if (diffDays < 0 || diffDays >= 12) return;
+        
+        const todayPlan = tripData.dailyPlans[diffDays];
+        if (!todayPlan) return;
+        
+        // 检查今天是否已经提醒过
+        const reminderKey = `trip-reminder-${diffDays}`;
+        if (Storage._safeGet(reminderKey)) return;
+        
+        // 显示提醒
+        setTimeout(() => {
+            Utils.showToast(`📅 今天是${todayPlan.date}：${todayPlan.title}`, 'info');
+            Storage._safeSet(reminderKey, 'true');
+        }, 2000);
+    },
+
     // 完成庆祝动画
     showCelebration() {
         const celebration = document.createElement('div');
@@ -725,15 +752,17 @@ const App = {
     }
 };
 
+// 注册 Service Worker（PWA 离线支持）
+if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('./sw.js').catch(() => {});
+}
+
 // 启动应用
 document.addEventListener('DOMContentLoaded', () => {
     App.init();
     
-    // 键盘导航支持 - Escape 关闭弹窗
     document.addEventListener('keydown', (e) => {
-        if (e.key === 'Escape') {
-            App.closeAllModals();
-        }
+        if (e.key === 'Escape') App.closeAllModals();
     });
 });
 

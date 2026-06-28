@@ -62,6 +62,7 @@ const CloudSync = {
                 theme:         Storage.getTheme(),
                 expenses:      Storage.getExpenses(),
                 categories:    Storage.getCategories(),
+                budget:        Storage.getBudget(),
                 locations:     Storage.getCustomLocations(),
                 updatedAt:     firebase.firestore.FieldValue.serverTimestamp()
             };
@@ -109,6 +110,9 @@ const CloudSync = {
         }
         if (data.theme !== undefined) {
             localStorage.setItem('trip-theme', JSON.stringify(data.theme));
+        }
+        if (data.budget !== undefined) {
+            localStorage.setItem('trip-budget', data.budget.toString());
         }
         if (data.expenses !== undefined) {
             localStorage.setItem('trip-expenses', JSON.stringify(data.expenses));
