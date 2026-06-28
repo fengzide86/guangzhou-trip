@@ -33,13 +33,31 @@ const CloudSync = {
 
         try {
             firebase.initializeApp(firebaseConfig);
+            if (typeof firebase.firestore !== 'function') {
+                console.error('[CloudSync] firebase.firestore 不可用，请确认已加载 firestore SDK');
+                this._updateIndicator('error');
+                return;
+            }
             this.db = firebase.firestore();
             this._enabled = true;
             console.log('[CloudSync] 已连接，项目:', firebaseConfig.projectId);
             this._updateIndicator('synced');
             this._startListening();
         } catch (e) {
-            console.warn('[CloudSync] 初始化失败:', e);
+            // 如果是重复初始化错误，尝试获取已有实例
+            if (e.code === 'app/duplicate-app') {
+                try {
+                    this.db = firebase.app().firestore();
+                    this._enabled = true;
+                    console.log('[CloudSync] 使用已有 Firebase 实例，项目:', firebaseConfig.projectId);
+                    this._updateIndicator('synced');
+                    this._startListening();
+                    return;
+                } catch (e2) {
+                    console.error('[CloudSync] 获取已有实例也失败:', e2);
+                }
+            }
+            console.error('[CloudSync] 初始化失败:', e);
             this._updateIndicator('error');
         }
     },

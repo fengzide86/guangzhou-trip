@@ -889,9 +889,9 @@
     <!-- Toast 提示 -->
     <div class="toast-container" id="toastContainer"></div>
 
-    <!-- Firebase SDK (compat 版本，全局变量方式) -->
-    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+    <!-- Firebase SDK (本地化，避免 CDN 访问问题) -->
+    <script src="firebase-app-compat.js"></script>
+    <script src="firebase-firestore-compat.js"></script>
     <!-- 云同步配置与模块 -->
     <script src="firebase-config.js"></script>
     <script src="cloud-storage.js"></script>
